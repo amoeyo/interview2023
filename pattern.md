@@ -1,6 +1,20 @@
 # 设计模式
 
-## 单例模式的析构
+
+<!-- vscode-markdown-toc -->
+* 1. [单例模式的析构](#)
+
+<!-- vscode-markdown-toc-config
+	numbering=true
+	autoSave=true
+	/vscode-markdown-toc-config -->
+<!-- /vscode-markdown-toc -->
+
+
+
+---
+
+##  1. <a name=''></a>单例模式的析构
 
 **为什么要析构？**
 

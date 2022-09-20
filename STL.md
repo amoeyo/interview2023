@@ -1,6 +1,23 @@
 # STL
 
-## 模板的编译与链接
+<!-- vscode-markdown-toc -->
+* 1. [模板的编译与链接](#)
+* 2. [STL](#STL)
+	* 2.1. [STL空间配置器](#STL-1)
+	* 2.2. [unordered_map解决hash冲突的方法](#unordered_maphash)
+	* 2.3. [容器的线程安全](#-1)
+
+<!-- vscode-markdown-toc-config
+	numbering=true
+	autoSave=true
+	/vscode-markdown-toc-config -->
+<!-- /vscode-markdown-toc -->
+
+
+
+---
+
+##  1. <a name=''></a>模板的编译与链接
 
 [参考](https://blog.csdn.net/c_base_jin/article/details/72861789)
 
@@ -19,7 +36,7 @@
 使用boost::any或boost::function执行类型擦除，避开静态编译期间的类型检查。boost::any是一个保存了原始类型信息并将对象转换为统一类型的模板类
 
 
-## STL
+##  2. <a name='STL'></a>STL
 
 容器，算法，迭代器，仿函数，适配器，配置器
 
@@ -27,7 +44,7 @@ SGI STL构造由::construct进行，析构由::destroy负责
 
 空间分配由alloc::allocator负责，释放由alloc::deallocate负责
 
-### STL空间配置器
+###  2.1. <a name='STL-1'></a>STL空间配置器
 
 一级配置器和二级配置器
 
@@ -41,7 +58,7 @@ SGI STL构造由::construct进行，析构由::destroy负责
 
 二级配置器：内存池，维护16个自由链表，负责16种小型区块的次配置能力
 
-### unordered_map解决hash冲突的方法
+###  2.2. <a name='unordered_maphash'></a>unordered_map解决hash冲突的方法
 
 [参考](https://zhuanlan.zhihu.com/p/346539485)
 
@@ -83,7 +100,7 @@ load_factor <= max_load_factor
 
 合适的装载因子（Java为0.75，msvc和g++默认为1）：可以使现有容量的利用率和需要扩容的频繁度可以较好的协调，不会过早的扩容导致空间和时间的浪费也不会太晚扩容导致哈希冲突发生过多。
 
-### 容器的线程安全
+###  2.3. <a name='-1'></a>容器的线程安全
 
 - 多个读取者是安全的。多线程可能同时读取一个容器的内容，这将正确地执行。当然，在读取时不能有任何写入者操作这个容器。
 - 对不同容器的多个写入者是安全的。多线程可以同时写不同的容器。
