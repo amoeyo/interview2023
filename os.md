@@ -1,22 +1,22 @@
 # 操作系统
 
 <!-- vscode-markdown-toc -->
-* 1. [Linux内存管理](#Linux)
-	* 1.1. [内存碎片](#)
-	* 1.2. [伙伴分配器](#-1)
-	* 1.3. [slab分配器](#slab)
-	* 1.4. [从操作系统角度看malloc](#malloc)
-* 2. [内核进程管理](#-1)
-	* 2.1. [线程切换](#-1)
-* 3. [用户空间和内核空间](#-1)
-* 4. [可重入函数和不可重入函数](#-1)
-* 5. [为什么要引入虚拟地址](#-1)
-* 6. [read/write系统调用过程](#readwrite)
+* 1. [Linux内存管理](#LinuxMemoryManagement)
+	* 1.1. [内存碎片](#MemoryFragments)
+	* 1.2. [伙伴分配器](#BuddyAllocator)
+	* 1.3. [slab分配器](#SlabAllocator)
+	* 1.4. [从操作系统角度看malloc](#MallocFromOSSide)
+* 2. [内核进程管理](#KernelProcessManagement)
+	* 2.1. [线程切换](#TreadSwitch)
+* 3. [用户空间和内核空间](#UserKernelSpace)
+* 4. [可重入函数和不可重入函数](#Reentrancy)
+* 5. [为什么要引入虚拟地址](#VirtualAddress)
+* 6. [read/write系统调用过程](#RWSystemCall)
 	* 6.1. [Linux I/O堆栈](#LinuxIO)
-	* 6.2. [read/write详细过程](#readwrite-1)
+	* 6.2. [read/write详细过程](#RW)
 * 7. [mmap和DAX](#mmapDAX)
-* 8. [守护进程](#-1)
-* 9. [文件描述符](#-1)
+* 8. [守护进程](#Daemon)
+* 9. [文件描述符](#FileDescriptor)
 
 <!-- vscode-markdown-toc-config
 	numbering=true
@@ -26,9 +26,9 @@
 
 ---
 
-##  1. <a name='Linux'></a>Linux内存管理
+##  1. <a name='LinuxMemoryManagement'></a>Linux内存管理
 
-###  1.1. <a name=''></a>内存碎片
+###  1.1. <a name='MemoryFragments></a>内存碎片
 
 1. 内部碎片是由于采用固定大小的内存分区，即以固定的大小块为单位来分配，采用这种方法，进程所分配的内存可能会比所需要的大，这多余的部分便是内部碎片。
 2. 外部碎片是由于未分配的连续内存区域太小，以至于不能满足任意进程所需要的内存分配请求，这些小片段且不连续的内存空间被称为外部碎片。
@@ -40,7 +40,7 @@
 
 如果采用方案一，势必在每一次映射都要改写内核的页表，进而刷新TLB，这使得分配的速度大大减小。因此，Linux采用方案二来解决外部碎片问题，也就是伙伴（buddy）系统。
 
-###  1.2. <a name='-1'></a>伙伴分配器
+###  1.2. <a name='BuddyAllocator'></a>伙伴分配器
 
 [源码分析](https://zhuanlan.zhihu.com/p/526134525)
 
@@ -76,7 +76,7 @@
 
 2. 因为buddy allocator每次分配必须是2^order个page同时分配，这样当实际需要内存大小小于2^order时，就会造成内存浪费，所以Linux为了解决buddy allocator造成的内部碎片问题，后面会引入**slab分配器**。
 
-###  1.3. <a name='slab'></a>slab分配器
+###  1.3. <a name='SlabAllocator'></a>slab分配器
 
 [参考](https://zhuanlan.zhihu.com/p/358891862)
 
@@ -104,7 +104,7 @@ slab为这样的对象创建一个cache，即缓存。每个cache所占的内存
 
 ![](img/内存分配函数.png)
 
-###  1.4. <a name='malloc'></a>从操作系统角度看malloc
+###  1.4. <a name='MallocFromOSSide'></a>从操作系统角度看malloc
 
 在linux操作系统中，每个进程都通过一个task_struct的结构体描述，每个进程的地址空间都通过一个mm_struct描述，c语言中的每个段空间都通过vm_area_struct表示，他们关系如下
 
@@ -125,7 +125,7 @@ malloc的过程其实就是把VMA分配到各种段当中，这时候是没有�
 
 而用户态的malloc是通过brk/mmap系统调用每次向内核申请一页，然后在标准库里再做进一步管理供用户程序使用。
 
-##  2. <a name='-1'></a>内核进程管理
+##  2. <a name='KernelProcessManagement'></a>内核进程管理
 
 一个是最高层次的：mm_struct，一个是较高层次的：vm_area_structs。最高层次的mm_struct结构描述了一个进程的整个虚拟地址空间。较高层次的结构vm_area_truct描述了虚拟地址空间的一个区间（简称虚拟区）。每个进程只有一个mm_struct结构，在每个进程的task_struct结构中，有一个指向该进程的结构。可以说，mm_struct结构是对整个用户空间的描述。
 
@@ -133,7 +133,7 @@ malloc的过程其实就是把VMA分配到各种段当中，这时候是没有�
 
 内核的页表在内核初始化的时候就会自己分配好由内核自己管理，每个进程创建的时候拷贝这个资料来初始化自己虚拟地址空间中的内核的部分。也就是说不同进程的虚拟地址空间中内核态的映射规则是一样的。
 
-###  2.1. <a name='-1'></a>线程切换
+###  2.1. <a name='TreadSwitch'></a>线程切换
 
 线程切换主要有两种情况：不同程序的线程，同一程序的不同线程
 
@@ -141,7 +141,7 @@ malloc的过程其实就是把VMA分配到各种段当中，这时候是没有�
 
 线程切换开销大概在2~3us左右
 
-##  3. <a name='-1'></a>用户空间和内核空间
+##  3. <a name='UserKernelSpace'></a>用户空间和内核空间
 
 **内核空间**中主要负责 **操作系统内核线程**以及**用户程序系统调用**。
 
@@ -158,7 +158,7 @@ malloc的过程其实就是把VMA分配到各种段当中，这时候是没有�
 - 外围设备中断
 
 
-##  4. <a name='-1'></a>可重入函数和不可重入函数
+##  4. <a name='Reentrancy'></a>可重入函数和不可重入函数
 
 一个函数要做到线程安全，需要解决多个线程调用函数时访问共享资源的冲突。而一个函数要做到可重入，需要不在函数内部使用静态或全局数据，不返回静态或全局数据，也不调用不可重入函数。
 
@@ -169,7 +169,7 @@ malloc的过程其实就是把VMA分配到各种段当中，这时候是没有�
 可重入一定线程安全，但线程安全不一定是可重入的，如malloc
 
 
-##  5. <a name='-1'></a>为什么要引入虚拟地址
+##  5. <a name='VirtualAddress'></a>为什么要引入虚拟地址
 
 [参考1](https://blog.csdn.net/salmonwilliam/article/details/114445320)
 
@@ -199,7 +199,7 @@ MMU是处理虚拟地址和物理地址之间的转换的专用硬件结构，TL
 
 **每个CPU core都有自己的TLB**
 
-##  6. <a name='readwrite'></a>read/write系统调用过程
+##  6. <a name='RWSystemCall'></a>read/write系统调用过程
 
 ###  6.1. <a name='LinuxIO'></a>Linux I/O堆栈
 
@@ -207,7 +207,7 @@ MMU是处理虚拟地址和物理地址之间的转换的专用硬件结构，TL
 
 虚拟文件系统（VFS）层提供底层文件系统的抽象。页面缓存层提供文件数据的缓存。文件系统层在块存储之上提供特定于文件系统的实现。块层提供操作系统级的块请求/响应管理和块I/O调度。最后，设备驱动程序处理设备特定的I/O命令提交和完成。
 
-###  6.2. <a name='readwrite-1'></a>read/write详细过程
+###  6.2. <a name='RW'></a>read/write详细过程
 
 ![](img/read系统调用.png)
 
@@ -234,7 +234,7 @@ DAX(Direct Access)：这个特性是基于mmap的。而DAX的区别在于完全�
 
 
 
-##  8. <a name='-1'></a>守护进程
+##  8. <a name='Daemon'></a>守护进程
 
 守护进程（Daemon Process），也就是通常说的 Daemon 进程（精灵进程），是 Linux 中的后台服务进程。它是一个生存期较长的进程，通常独立于控制终端并且周期性地执行某种任务或等待处理某些发生的事件。
 
@@ -250,7 +250,7 @@ DAX(Direct Access)：这个特性是基于mmap的。而DAX的区别在于完全�
 - 利用 inetd 超级服务器启动，如 telnet 等；
 - 由 cron 定时启动以及在终端用 nohup 启动的进程也是守护进程。
 
-##  9. <a name='-1'></a>文件描述符
+##  9. <a name='FileDescriptor'></a>文件描述符
 
 ![](img/文件描述符表.png)
 

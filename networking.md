@@ -1,16 +1,18 @@
 # 计算机网络
 
 <!-- vscode-markdown-toc -->
-* 1. [半连接状态](#)
-* 2. [为什么是三次握手和四次挥手](#-1)
-* 3. [IO多路复用](#IO)
+* 1. [半连接状态](#HalfConnection)
+* 2. [为什么是三次握手和四次挥手](#Connection)
+* 3. [IO多路复用](#IOMultiplexing)
 	* 3.1. [select](#select)
 	* 3.2. [poll](#poll)
 	* 3.3. [epoll](#epoll)
 	* 3.4. [select vs epoll](#selectvsepoll)
-* 4. [出现大量TIME_WAIT和CLOSE_WAIT的解决方法](#TIME_WAITCLOSE_WAIT)
+* 4. [出现大量TIME_WAIT和CLOSE_WAIT的解决方法](#WAIT)
 	* 4.1. [大量TIME_WAIT](#TIME_WAIT)
 	* 4.2. [大量CLOSE_WAIT](#CLOSE_WAIT)
+* 5. [DHCP协议](#DHCP)
+* 6. [打开一个搜索引擎网站用到了哪些协议](#)
 
 <!-- vscode-markdown-toc-config
 	numbering=true
@@ -23,7 +25,7 @@
 
 TCP/IP协议是大端模式，x86 CPU是小端模式
 
-##  1. <a name=''></a>半连接状态
+##  1. <a name='HalfConnection'></a>半连接状态
 
 客户端向服务端发起连接请求，服务器第一次收到客户端的SYN之后，就会处于SYN_RCVD状态，此时双方还没有完全建立其连接，服务器会把此种状态下请求连接放到一个队列里，我们将这种队列称之为半连接队列。
 
@@ -38,7 +40,7 @@ TCP/IP协议是大端模式，x86 CPU是小端模式
 服务器发送完SYN-ACK包，如果未收到客户端确认包，服务器进行首次重传，等待一段时间仍未收到客户确认包，进行第二次重传。如果重传次数超过系统规定的最大重传次数，系统将该连接信息从半连接队列中删除。
 每次重传等待的时间一般不同，一般是指数增长。如时间间隔是1，2，4，8
 
-##  2. <a name='-1'></a>为什么是三次握手和四次挥手
+##  2. <a name='Connection'></a>为什么是三次握手和四次挥手
 
 三次握手是为了让双方确认对方和自己的收发状态没有异常
 
@@ -48,7 +50,7 @@ TCP/IP协议是大端模式，x86 CPU是小端模式
 
 四次挥手，全双工，断开连接都要各自发送FIN和ACK
 
-##  3. <a name='IO'></a>IO多路复用
+##  3. <a name='IOMultiplexing'></a>IO多路复用
 
 单线程或单进程同时监测若干个文件描述符是否可以执行IO操作的能力。
 
@@ -132,7 +134,7 @@ epoll优于poll和select的地方
 2. epoll内部用一个文件描述符挂载需要监听的文件描述符，这个epoll的文件描述符可以在多个线程/进程共享，所以epoll的使用场景要比select&poll要多。
 
 
-##  4. <a name='TIME_WAITCLOSE_WAIT'></a>出现大量TIME_WAIT和CLOSE_WAIT的解决方法
+##  4. <a name='WAIT'></a>出现大量TIME_WAIT和CLOSE_WAIT的解决方法
 
 ![三次握手和四次挥手](img/三次握手和四次挥手.png)
 
@@ -162,8 +164,22 @@ CLOSE_WAIT是在被动关闭连接情况下，在已经接收到FIN，**但是�
 3. 使用一个Heart-Beat线程，定期向socket发送指定格式的心跳数据包，如果接收到对方的RST报文，说明对方已经关闭了socket，那么我们也关闭这个socket。
 4. 设置SO_KEEPALIVE选项，并修改内核参数
 
-## DHCP
+## 5. <a name='DHCP'></a>DHCP协议
 
 DHCP（Dynamic Host Configuration Protocol，动态主机配置协议），前身是BOOTP协议，是一个局域网的网络协议，使用UDP协议工作，统一使用两个IANA分配的端口：67（服务器端），68（客户端）。DHCP通常被用于局域网环境，主要作用是集中的管理、分配IP地址，使client动态的获得IP地址、Gateway地址、DNS服务器地址等信息，并能够提升地址的使用率。简单来说，DHCP就是一个不需要账号密码登录的、自动给内网机器分配IP地址等信息的协议。
+
+## 6. <a name='NetworkingProtocol'></a>打开一个搜索引擎网站用到了哪些协议
+
+从其浏览器中输入http://www.baidu.com，直到baidu的网站首页显示在其浏览器中，请你分析在此过程中，按照TCP/IP 参考模型，从应用层到网络接口层都用到了哪些协议，每个协议所起的作用是什么？
+
+应用层：NAT网络地址转换；DNS域名解析；HTTP超文本传输协议
+
+运输层：TCP传输控制协议，TCP连接，可靠传输
+
+网络层：IP协议，数据报服务；路由选择OPSF协议；ARP地址解析，将IP地址解析为MAC地址；ICMP网际控制报文协议，查询与差错报告，当遇到IP数据无法访问目标、IP 路由器无法按当前的传输速率转发数据包等情况时，会自动发送ICMP消息
+
+![](img/网页访问.png)
+
+
 
 
